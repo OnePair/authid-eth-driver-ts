@@ -12,7 +12,7 @@
 
 Driver setup
 ```js
-import { AuthIDEthDriver } "authid-eth-driver";
+import { EthAuthIDDriver } "authid-eth-driver";
 import { JsonRpcProvider } from "ethers/providers"; // Import an ethers provider
 
 const filePath = "<DIR_PATH>";
