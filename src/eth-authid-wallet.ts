@@ -164,18 +164,21 @@ export class EthAuthIDWallet {
 
   public unlockKeys(password: string): Promise<object> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
-      let keys: object;
+      try {
+        let keys: object;
 
-      if (fs.existsSync(this.keysFilePath)) {
-        // load wallet if it exists
-        let encryptedKeys = JSON.parse(fs.readFileSync(this.keysFilePath).toString());
-        keys = cryptoJSON.decrypt(encryptedKeys, password, { algorithm: AES_256, encoding: "hex" });
-      } else {
-        keys = EthAuthIDWallet.createKeys();
-        this.saveKeys(keys, password);
+        if (fs.existsSync(this.keysFilePath)) {
+          // load wallet if it exists
+          let encryptedKeys = JSON.parse(fs.readFileSync(this.keysFilePath).toString());
+          keys = cryptoJSON.decrypt(encryptedKeys, password, { algorithm: AES_256, encoding: "hex" });
+        } else {
+          keys = EthAuthIDWallet.createKeys();
+          this.saveKeys(keys, password);
+        }
+        onSuccess(keys);
+      } catch (err) {
+        onError(err);
       }
-
-      onSuccess(keys);
     });
   }
 
@@ -192,11 +195,15 @@ export class EthAuthIDWallet {
 
   public getKeyPair(password: string): Promise<object> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
-      let keys = await this.unlockKeys(password);
-      let controller = keys["controller"];
-      let keyPair = { address: controller["address"], privateKey: controller["privateKey"] };
+      try {
+        let keys = await this.unlockKeys(password);
+        let controller = keys["controller"];
+        let keyPair = { address: controller["address"], privateKey: controller["privateKey"] };
 
-      onSuccess(keyPair);
+        onSuccess(keyPair);
+      } catch (err) {
+        onError(err);
+      }
     });
   }
 

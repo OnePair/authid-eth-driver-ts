@@ -13,6 +13,7 @@
   "dependencies": {
     "@types/node": "^10.12.18",
     "crypto-json": "^2.0.2",
+    "ethb-did": "file:../ethb-did",
     "ethers": "^4.0.18",
     "mkdirp": "^0.5.1",
     "node-persist": "^3.0.2",

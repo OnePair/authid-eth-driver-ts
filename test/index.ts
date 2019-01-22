@@ -103,6 +103,17 @@ describe("Testing eth-driver", () => {
         }
       });
     });
+
+    it("Password should be invalid", (done) => {
+      assert.doesNotThrow(async () => {
+        try {
+          let address = await ethDriver.getAddress("wrongpassword");
+          done(new Error("Password should be invalid!"));
+        } catch (err) {
+          done();
+        }
+      });
+    });
   });
 
   describe("Driver tests", () => {
