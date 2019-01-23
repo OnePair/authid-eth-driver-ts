@@ -57,6 +57,11 @@ export class EthAuthIDWallet {
     privateKey: string, password: string): Promise<void> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
       try {
+        let processorInfo = await this.processors.get(processorId);
+
+        if (processorInfo != undefined)
+          throw new Error("Processor ID is already taken!");
+
         let processorObj = { token: processor.getToken(), privateKey: privateKey }
         let encrypted = cryptoJSON.encrypt(processorObj, password, { algorithm: AES_256, encoding: "hex" });
 
