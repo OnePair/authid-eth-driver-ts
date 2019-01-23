@@ -88,16 +88,27 @@ export class EthAuthIDDriver {
   * Import a DID.
   *
   * @param {string} password The wallet password.
+  * @param {string} password The wallet password.
   *
   * @param {Promise<void>}
   */
-  public importDID(did: string): Promise<void> {
+  public importDID(password: string, did: string): Promise<void> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
       // Check if the wallet contains a did
       try {
         let info = await this.getInfo();
         if ("did" in info)
           throw new Error("This wallet already contains a DID!");
+
+        // Resolve the did
+        let ethbDID = await EthBDID.resolve(did, this.provider);
+        let controller = ethbDID.getController();
+
+        let walletAddress = await this.getAddress(password);
+
+        if (controller != walletAddress)
+          throw new Error("This wallet does not have the correct keys for the DID!");
+
         this.wallet.setDid(did);
 
         onSuccess();
@@ -143,7 +154,7 @@ export class EthAuthIDDriver {
 
         // 3 Save the processor info
         processorInfo = { publicKey: processor.getPublicKey() };
-        this.processors.set(processorId, processorInfo);
+        await this.processors.set(processorId, processorInfo);
 
         onSuccess(processor.getToken());
       } catch (err) {
