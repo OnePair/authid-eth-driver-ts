@@ -224,56 +224,63 @@ export class EthAuthIDWallet {
 
   public getMnemonic(password: string): Promise<string> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
-      let keys = await this.unlockKeys(password);
-      onSuccess(keys["controller"]["mnemonic"]);
+      try {
+        let keys = await this.unlockKeys(password);
+        onSuccess(keys["controller"]["mnemonic"]);
+      } catch (err) {
+        onError(err);
+      }
     });
   }
 
   public recoverFromMnemonic(mnemonic: string, password: string): Promise<string> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
+      try {
+        /*
+        * Recover the controller key
+        */
+        let controllerHDNode = fromMnemonic(mnemonic);
 
-      /*
-      * Recover the controller key
-      */
-      let controllerHDNode = fromMnemonic(mnemonic);
+        let controller = {
+          address: controllerHDNode["address"],
+          privateKey: controllerHDNode["privateKey"],
+          mnemonic: controllerHDNode["mnemonic"]
+        }
 
-      let controller = {
-        address: controllerHDNode["address"],
-        privateKey: controllerHDNode["privateKey"],
-        mnemonic: controllerHDNode["mnemonic"]
+        /*
+        * Recover the authorization key
+        */
+        let controllerEntropy = mnemonicToEntropy(mnemonic);
+
+        /*
+        * Recover the auth key
+        */
+        let authKeyEntropy = Crypto.createHash("sha256")
+          .update(controllerEntropy)
+          .digest();
+
+        // hash again
+        let authPrivateKey = Crypto.createHash("sha256")
+          .update(authKeyEntropy)
+          .digest();
+
+        let authPublicKey = Secp256k1.publicKeyCreate(authPrivateKey);
+
+        let privateKeyHex = Buffer.from(authPrivateKey).toString("hex");
+        let publicKeyHex = Buffer.from(authPublicKey).toString("hex");
+
+        let authorizationKey = {
+          privateKey: privateKeyHex,
+          publicKey: publicKeyHex
+        }
+
+        let keys = { controller: controller, authorizationKey: authorizationKey };
+        await this.saveKeys(keys, password);
+
+        onSuccess();
+      } catch (err) {
+        onError(err);
       }
-
-      /*
-      * Recover the authorization key
-      */
-      let controllerEntropy = mnemonicToEntropy(mnemonic);
-
-      /*
-      * Recover the auth key
-      */
-      let authKeyEntropy = Crypto.createHash("sha256")
-        .update(controllerEntropy)
-        .digest();
-
-      // hash again
-      let authPrivateKey = Crypto.createHash("sha256")
-        .update(authKeyEntropy)
-        .digest();
-
-      let authPublicKey = Secp256k1.publicKeyCreate(authPrivateKey);
-
-      let privateKeyHex = Buffer.from(authPrivateKey).toString("hex");
-      let publicKeyHex = Buffer.from(authPublicKey).toString("hex");
-
-      let authorizationKey = {
-        privateKey: privateKeyHex,
-        publicKey: publicKeyHex
-      }
-
-      let keys = { controller: controller, authorizationKey: authorizationKey };
-      await this.saveKeys(keys, password);
-
-      onSuccess();
     });
   }
 
