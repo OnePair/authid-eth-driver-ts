@@ -298,6 +298,18 @@ export class EthAuthIDDriver {
     });
   }
 
+  public getPublicKeys(password: string): Promise<object> {
+    return new Promise(async (onSuccess: Function, onError: Function) => {
+      try {
+        let publicKeys = await this.wallet.getPublicKeys(password);
+
+        onSuccess(publicKeys);
+      } catch (err) {
+        onError(err);
+      }
+    });
+  }
+
   public init(): Promise<void> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
       try {

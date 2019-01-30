@@ -114,6 +114,22 @@ describe("Testing eth-driver", () => {
         }
       });
     });
+
+    it("Should get public keys", (done) => {
+      assert.doesNotThrow(async () => {
+        try {
+          let publicKeys = await ethDriver.getPublicKeys(password);
+          if (!("authorizationKey" in publicKeys)
+            || !("controllerAddress" in publicKeys)) {
+            done(new Error("Missing keys!"));
+          } else {
+            done();
+          }
+        } catch (err) {
+          done(new Error(err))
+        }
+      });
+    });
   });
 
   describe("Driver tests", () => {

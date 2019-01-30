@@ -227,6 +227,23 @@ export class EthAuthIDWallet {
     });
   }
 
+  public getPublicKeys(password: string): Promise<object> {
+    return new Promise(async (onSuccess: Function, onError: Function) => {
+      try {
+        let keys = await this.unlockKeys(password);
+        let publicKeys = {
+          authorizationKey: keys["authorizationKey"]["publicKey"],
+          controllerAddress: keys["controller"]["address"]
+        };
+        onSuccess(publicKeys);
+      }
+
+      catch (err) {
+        onError(err);
+      }
+    });
+  }
+
   public getMnemonic(password: string): Promise<string> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
       try {
