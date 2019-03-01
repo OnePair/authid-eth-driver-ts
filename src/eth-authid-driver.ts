@@ -72,7 +72,7 @@ export class EthAuthIDDriver {
         let processorKeyPair = EthAuthIDDriver.createKeyPair();
         let processorId = "local";
         let localProcessor = await this.authorizeProcessor(password, processorId,
-          processorKeyPair["publicKey"], true, true);
+          processorKeyPair["publicKey"], true, true, did);
 
         // 3) Import the processor
         await this.importProcessor(password, processorId, localProcessor, processorKeyPair["privateKey"]);
@@ -126,18 +126,28 @@ export class EthAuthIDDriver {
   * @param {string} publicKey The public key of the processor.
   * @param {boolean} sig Permission for authentication.
   * @param {boolean} auth Permission for authentication.
+  * @param {EthBDID} did EthBDID instance
   *
   * @param {string} The processor token.
   */
   public authorizeProcessor(password: string, processorId: string,
-    publicKey: string, sig: boolean, auth: boolean): Promise<string> {
+    publicKey: string, sig: boolean, auth: boolean): Promise<string>;
+  public authorizeProcessor(password: string, processorId: string,
+    publicKey: string, sig: boolean, auth: boolean, did?: EthBDID): Promise<string>;
+  public authorizeProcessor(password: string, processorId: string,
+    publicKey: string, sig: boolean, auth: boolean, did?: EthBDID): Promise<string> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
       try {
-        let info = await this.getInfo();
         let processorInfo: object;
 
-        if (!("did" in info))
-          throw new Error("This wallet does not contain a DID!");
+        if (!did) {
+          let info = await this.getInfo();
+
+          if (!("did" in info))
+            throw new Error("This wallet does not contain a DID!");
+
+          did = await EthBDID.resolve(info["did"], this.provider);
+        }
 
         processorInfo = await this.processors.get(processorId);
 
@@ -147,12 +157,10 @@ export class EthAuthIDDriver {
         let keys = await this.wallet.unlockKeys(password);
         let authKeyPair = keys["authorizationKey"];
 
-        // 1) Resolve the did
-        let did = await EthBDID.resolve(info["did"], this.provider);
-        // 2) Create the processor
+        // 1) Create the processor
         let processor = did.authorizeProcessor(publicKey, sig, auth, authKeyPair["privateKey"])
 
-        // 3 Save the processor info
+        // 2) Save the processor info
         processorInfo = { publicKey: processor.getPublicKey() };
         await this.processors.set(processorId, processorInfo);
 
