@@ -2,7 +2,7 @@
   "name": "authid-eth-driver",
   "version": "0.0.1",
   "description": "An AuthID Ethereum driver reference implementation built in typescript.",
-  "main": "./build/index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "tsc": "tsc",
     "build": "tsc",
@@ -13,7 +13,7 @@
   "dependencies": {
     "@types/node": "^10.12.18",
     "crypto-json": "^2.0.2",
-    "ethb-did": "file:../ethb-did",
+    "ethb-did": "git+https://github.com/OnePair/ethb-did.git#7956662c6a7a941e398167860b0e573f4307584e",
     "ethers": "^4.0.18",
     "mkdirp": "^0.5.1",
     "node-persist": "^3.0.2",

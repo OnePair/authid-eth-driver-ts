@@ -1,5 +1,5 @@
 import { EthAuthIDWallet } from "./eth-authid-wallet";
-import { Provider } from "ethb-did/node_modules/ethers/providers";
+import { Provider } from "ethers/providers";
 import { EthBDID, Processor } from "ethb-did";
 import { randomBytes } from "crypto";
 
