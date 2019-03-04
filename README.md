@@ -1,7 +1,7 @@
 
 # authid-eth-driver-ts
 
-> An AuthID Ethereum driver reference implementation built with typescript.
+> An AuthID Ethereum driver reference implementation built in typescript.
 
 
 ## Install
