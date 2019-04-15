@@ -14,6 +14,7 @@
     "@types/node": "^10.12.18",
     "authid-core-ts": "git+https://github.com/OnePair/authid-core-ts.git#4c9ac25c89d23cbccd9252403e5f500bc54c8558",
     "crypto-json": "^2.0.2",
+    "eth-username": "git+https://github.com/OnePair/eth-username.git#a5c54c041d5a62496313c98ab623f27465dd0b28",
     "ethb-did": "git+https://github.com/OnePair/ethb-did.git#7956662c6a7a941e398167860b0e573f4307584e",
     "ethers": "^4.0.27",
     "jsonwebtoken": "^8.5.1",
