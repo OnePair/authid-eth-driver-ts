@@ -39,18 +39,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var eth_authid_wallet_1 = require("./eth-authid-wallet");
+var ethers_1 = require("ethers");
 var ethb_did_1 = require("ethb-did");
+var eth_username_1 = require("eth-username");
 var crypto_1 = require("crypto");
 var path_1 = __importDefault(require("path"));
+var url_1 = __importDefault(require("url"));
 var node_persist_1 = __importDefault(require("node-persist"));
 var secp256k1_1 = __importDefault(require("secp256k1"));
+var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var WALLET_DIR_NAME = "wallet";
 var PROCESSORS_STORAGE = "processors.storage";
+/*
+* TODO: add type to promises
+*/
 var EthAuthIDDriver = /** @class */ (function () {
-    function EthAuthIDDriver(filePath, provider, ipfsHost) {
+    function EthAuthIDDriver(filePath, provider, ipfsHost, network, options) {
         this.filePath = filePath;
         this.provider = provider;
         this.ipfsHost = ipfsHost;
+        this.network = network;
+        this.usernameContract = options && options["usernameContract"] || null;
     }
     /*
     * Gets the crypto/ledger address.
@@ -175,10 +184,72 @@ var EthAuthIDDriver = /** @class */ (function () {
             });
         }); });
     };
+    /*
+    * Register a name.
+    * TODO: Save info in wallet (or do we???). Check if name already exists
+    * @param {string} password The wallet password.
+    * @param {string} name The name to register.
+    *
+    * @return {Promise<string>} The transaction address.
+    */
+    EthAuthIDDriver.prototype.registerName = function (password, name) {
+        var _this = this;
+        return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
+            var info, profile, signedProfile, keys, privateKey, usernameWallet, options, ethUsername, transaction, err_4;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 6, , 7]);
+                        return [4 /*yield*/, this.getInfo()];
+                    case 1:
+                        info = _a.sent();
+                        if (!("did" in info))
+                            throw new Error("This wallet does not contain a DID!");
+                        if ("name" in info)
+                            throw new Error("This wallet already contains a name!");
+                        profile = { username: name, did: info["did"] };
+                        return [4 /*yield*/, this.createJwt(password, profile, null)];
+                    case 2:
+                        signedProfile = _a.sent();
+                        return [4 /*yield*/, this.wallet.unlockKeys(password)];
+                    case 3:
+                        keys = _a.sent();
+                        privateKey = keys["controller"]["privateKey"];
+                        usernameWallet = new ethers_1.Wallet(privateKey, this.provider);
+                        options = {};
+                        if (this.usernameContract)
+                            options["contractAddress"] = this.usernameContract;
+                        return [4 /*yield*/, eth_username_1.EthUsername.load(usernameWallet, this.network, options)];
+                    case 4:
+                        ethUsername = _a.sent();
+                        return [4 /*yield*/, ethUsername.registerUsername(name, { did: signedProfile })];
+                    case 5:
+                        transaction = _a.sent();
+                        this.wallet.setName(name);
+                        onSuccess(transaction["hash"]);
+                        return [3 /*break*/, 7];
+                    case 6:
+                        err_4 = _a.sent();
+                        onError(err_4);
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
+                }
+            });
+        }); });
+    };
+    /*
+    * Import an already registered name.
+    *
+    * @param {string} password The wallet password.
+    * @param {string} name The name to import.
+    */
+    EthAuthIDDriver.prototype.importName = function (name) {
+        throw new Error("Not implemented!");
+    };
     EthAuthIDDriver.prototype.authorizeProcessor = function (password, processorId, publicKey, sig, auth, did) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var processorInfo, info, keys, authKeyPair, processor, err_4;
+            var processorInfo, info, keys, authKeyPair, processor, err_5;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -212,8 +283,8 @@ var EthAuthIDDriver = /** @class */ (function () {
                         onSuccess(processor.getToken());
                         return [3 /*break*/, 8];
                     case 7:
-                        err_4 = _a.sent();
-                        onError(err_4);
+                        err_5 = _a.sent();
+                        onError(err_5);
                         return [3 /*break*/, 8];
                     case 8: return [2 /*return*/];
                 }
@@ -231,7 +302,7 @@ var EthAuthIDDriver = /** @class */ (function () {
     EthAuthIDDriver.prototype.importProcessor = function (password, processorId, processorToken, privateKey) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var info, processor, issuer, err_5;
+            var info, processor, issuer, err_6;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -251,8 +322,8 @@ var EthAuthIDDriver = /** @class */ (function () {
                         onSuccess();
                         return [3 /*break*/, 4];
                     case 3:
-                        err_5 = _a.sent();
-                        onError(err_5);
+                        err_6 = _a.sent();
+                        onError(err_6);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -268,7 +339,7 @@ var EthAuthIDDriver = /** @class */ (function () {
     EthAuthIDDriver.prototype.revokeProcessor = function (password, processorId) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var info, processorInfo, keys, did, err_6;
+            var info, processorInfo, keys, did, err_7;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -302,8 +373,8 @@ var EthAuthIDDriver = /** @class */ (function () {
                         onSuccess();
                         return [3 /*break*/, 8];
                     case 7:
-                        err_6 = _a.sent();
-                        onError(err_6);
+                        err_7 = _a.sent();
+                        onError(err_7);
                         return [3 /*break*/, 8];
                     case 8: return [2 /*return*/];
                 }
@@ -322,7 +393,7 @@ var EthAuthIDDriver = /** @class */ (function () {
     EthAuthIDDriver.prototype.createJwt = function (password, claims, expiresIn) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var info, processorObj, processor, privateKey, jwt, err_7;
+            var info, processorObj, processor, privateKey, jwt, err_8;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -332,6 +403,10 @@ var EthAuthIDDriver = /** @class */ (function () {
                         info = _a.sent();
                         if (!("did" in info))
                             throw new Error("This wallet does not contain a DID!");
+                        if ("name" in claims)
+                            throw new Error("'name' is a reserved key!");
+                        if ("name" in info)
+                            claims["name"] = info["name"];
                         return [4 /*yield*/, this.wallet.getProcessor("auth", password)];
                     case 2:
                         processorObj = _a.sent();
@@ -341,8 +416,8 @@ var EthAuthIDDriver = /** @class */ (function () {
                         onSuccess(jwt);
                         return [3 /*break*/, 4];
                     case 3:
-                        err_7 = _a.sent();
-                        onError(err_7);
+                        err_8 = _a.sent();
+                        onError(err_8);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -360,24 +435,54 @@ var EthAuthIDDriver = /** @class */ (function () {
     EthAuthIDDriver.prototype.verifyJwt = function (jwt, id) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var did, verified, err_8;
+            var didUri, parsed, options, ethUsername, username, profile, decoded, signedUsername, claimedDid, did, verified, err_9;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 3, , 4]);
-                        return [4 /*yield*/, ethb_did_1.EthBDID.resolve(id, this.provider)];
+                        _a.trys.push([0, 9, , 10]);
+                        didUri = void 0;
+                        parsed = url_1.default.parse(id);
+                        if (!(parsed.protocol != null && parsed.protocol.toUpperCase() == "DID:")) return [3 /*break*/, 1];
+                        didUri = id;
+                        return [3 /*break*/, 6];
                     case 1:
+                        options = {};
+                        if (this.usernameContract)
+                            options["contractAddress"] = this.usernameContract;
+                        return [4 /*yield*/, eth_username_1.EthUsername.load(ethers_1.Wallet.createRandom().connect(this.provider), this.network, options)];
+                    case 2:
+                        ethUsername = _a.sent();
+                        username = EthAuthIDDriver.cleanName(id);
+                        return [4 /*yield*/, ethUsername.getProfile(username)];
+                    case 3:
+                        profile = _a.sent();
+                        return [4 /*yield*/, jsonwebtoken_1.default.decode(profile["did"])];
+                    case 4:
+                        decoded = _a.sent();
+                        signedUsername = decoded["username"];
+                        claimedDid = decoded["did"];
+                        if (signedUsername != username)
+                            throw new Error("The username does not own this DID!");
+                        // Verify the claim
+                        return [4 /*yield*/, this.verifyJwt(profile["did"], claimedDid)];
+                    case 5:
+                        // Verify the claim
+                        _a.sent();
+                        didUri = claimedDid;
+                        _a.label = 6;
+                    case 6: return [4 /*yield*/, ethb_did_1.EthBDID.resolve(didUri, this.provider)];
+                    case 7:
                         did = _a.sent();
                         return [4 /*yield*/, did.verifyJwt(jwt, "signing")];
-                    case 2:
+                    case 8:
                         verified = _a.sent();
                         onSuccess(verified);
-                        return [3 /*break*/, 4];
-                    case 3:
-                        err_8 = _a.sent();
-                        onError(err_8);
-                        return [3 /*break*/, 4];
-                    case 4: return [2 /*return*/];
+                        return [3 /*break*/, 10];
+                    case 9:
+                        err_9 = _a.sent();
+                        onError(err_9);
+                        return [3 /*break*/, 10];
+                    case 10: return [2 /*return*/];
                 }
             });
         }); });
@@ -385,7 +490,7 @@ var EthAuthIDDriver = /** @class */ (function () {
     EthAuthIDDriver.prototype.getInfo = function () {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var info, err_9;
+            var info, err_10;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -397,8 +502,8 @@ var EthAuthIDDriver = /** @class */ (function () {
                         onSuccess(info);
                         return [3 /*break*/, 3];
                     case 2:
-                        err_9 = _a.sent();
-                        onError(err_9);
+                        err_10 = _a.sent();
+                        onError(err_10);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -408,7 +513,7 @@ var EthAuthIDDriver = /** @class */ (function () {
     EthAuthIDDriver.prototype.getPublicKeys = function (password) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var publicKeys, err_10;
+            var publicKeys, err_11;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -419,8 +524,8 @@ var EthAuthIDDriver = /** @class */ (function () {
                         onSuccess(publicKeys);
                         return [3 /*break*/, 3];
                     case 2:
-                        err_10 = _a.sent();
-                        onError(err_10);
+                        err_11 = _a.sent();
+                        onError(err_11);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -430,7 +535,7 @@ var EthAuthIDDriver = /** @class */ (function () {
     EthAuthIDDriver.prototype.init = function () {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var processorStorageDir, err_11;
+            var processorStorageDir, err_12;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -445,11 +550,12 @@ var EthAuthIDDriver = /** @class */ (function () {
                     case 2:
                         _a.sent();
                         ethb_did_1.EthBDID.connectToIpfs(this.ipfsHost);
+                        eth_username_1.EthUsername.connectToIpfs(this.ipfsHost);
                         onSuccess();
                         return [3 /*break*/, 4];
                     case 3:
-                        err_11 = _a.sent();
-                        onError(err_11);
+                        err_12 = _a.sent();
+                        onError(err_12);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -465,6 +571,9 @@ var EthAuthIDDriver = /** @class */ (function () {
         var privateKeyHex = Buffer.from(privateKey).toString("hex");
         var publicKeyHex = Buffer.from(publicKey).toString("hex");
         return { privateKey: privateKeyHex, publicKey: publicKeyHex };
+    };
+    EthAuthIDDriver.cleanName = function (name) {
+        return name.substring(0, name.lastIndexOf(".eth"));
     };
     return EthAuthIDDriver;
 }());

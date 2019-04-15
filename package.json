@@ -12,9 +12,11 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^10.12.18",
+    "authid-core-ts": "git+https://github.com/OnePair/authid-core-ts.git#4c9ac25c89d23cbccd9252403e5f500bc54c8558",
     "crypto-json": "^2.0.2",
     "ethb-did": "git+https://github.com/OnePair/ethb-did.git#7956662c6a7a941e398167860b0e573f4307584e",
-    "ethers": "^4.0.18",
+    "ethers": "^4.0.27",
+    "jsonwebtoken": "^8.5.1",
     "mkdirp": "^0.5.1",
     "node-persist": "^3.0.2",
     "request-promise": "^4.2.2",

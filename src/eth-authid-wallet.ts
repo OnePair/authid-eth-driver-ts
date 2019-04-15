@@ -53,6 +53,17 @@ export class EthAuthIDWallet {
     });
   }
 
+  public setName(name: string): Promise<void> {
+    return new Promise(async (onSuccess: Function, onError: Function) => {
+      try {
+        await this.infoStorage.set("name", name);
+        onSuccess();
+      } catch (err) {
+        onError(err);
+      }
+    });
+  }
+
   public importProcessor(processorId: string, processor: Processor,
     privateKey: string, password: string): Promise<void> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
@@ -188,7 +199,7 @@ export class EthAuthIDWallet {
   }
 
   public saveKeys(keys: object, password: string): Promise<void> {
-    return new Promise(async (onSuccess: Function, onError: Function) => {
+    return new Promise(async (onSuccess: Function) => {
       let options = {};
       options["processorKey"] = keys["processorKey"];
 
@@ -216,8 +227,8 @@ export class EthAuthIDWallet {
     return new Promise(async (onSuccess: Function, onError: Function) => {
       try {
         let info = {};
-        await this.infoStorage.forEach(async (dantum) => {
-          info[dantum.key] = dantum.value
+        await this.infoStorage.forEach(async (dantum: object) => {
+          info[dantum["key"]] = dantum["value"];
         });
         onSuccess(info);
       }

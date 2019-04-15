@@ -87,10 +87,32 @@ var EthAuthIDWallet = /** @class */ (function () {
             });
         }); });
     };
+    EthAuthIDWallet.prototype.setName = function (name) {
+        var _this = this;
+        return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
+            var err_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, this.infoStorage.set("name", name)];
+                    case 1:
+                        _a.sent();
+                        onSuccess();
+                        return [3 /*break*/, 3];
+                    case 2:
+                        err_2 = _a.sent();
+                        onError(err_2);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        }); });
+    };
     EthAuthIDWallet.prototype.importProcessor = function (processorId, processor, privateKey, password) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var processorInfo, processorObj, encrypted, permissions, authProcessors, sigProcessors, err_2;
+            var processorInfo, processorObj, encrypted, permissions, authProcessors, sigProcessors, err_3;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -131,8 +153,8 @@ var EthAuthIDWallet = /** @class */ (function () {
                         onSuccess();
                         return [3 /*break*/, 9];
                     case 8:
-                        err_2 = _a.sent();
-                        onError(err_2);
+                        err_3 = _a.sent();
+                        onError(err_3);
                         return [3 /*break*/, 9];
                     case 9: return [2 /*return*/];
                 }
@@ -142,7 +164,7 @@ var EthAuthIDWallet = /** @class */ (function () {
     EthAuthIDWallet.prototype.getProcessor = function (permission, password) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var processorId, authProcessorIds, sigProcessorIds, processorObjEncrypted, processorObject, err_3;
+            var processorId, authProcessorIds, sigProcessorIds, processorObjEncrypted, processorObject, err_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -173,8 +195,8 @@ var EthAuthIDWallet = /** @class */ (function () {
                         onSuccess(processorObject);
                         return [3 /*break*/, 8];
                     case 7:
-                        err_3 = _a.sent();
-                        onError(err_3);
+                        err_4 = _a.sent();
+                        onError(err_4);
                         return [3 /*break*/, 8];
                     case 8: return [2 /*return*/];
                 }
@@ -184,7 +206,7 @@ var EthAuthIDWallet = /** @class */ (function () {
     EthAuthIDWallet.prototype.deleteProcessor = function (processorId) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var authProcessors, sigProcessors, authIndex, sigIndex, err_4;
+            var authProcessors, sigProcessors, authIndex, sigIndex, err_5;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -221,8 +243,8 @@ var EthAuthIDWallet = /** @class */ (function () {
                         onSuccess();
                         return [3 /*break*/, 9];
                     case 8:
-                        err_4 = _a.sent();
-                        onError(err_4);
+                        err_5 = _a.sent();
+                        onError(err_5);
                         return [3 /*break*/, 9];
                     case 9: return [2 /*return*/];
                 }
@@ -255,7 +277,7 @@ var EthAuthIDWallet = /** @class */ (function () {
     };
     EthAuthIDWallet.prototype.saveKeys = function (keys, password) {
         var _this = this;
-        return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
+        return new Promise(function (onSuccess) { return __awaiter(_this, void 0, void 0, function () {
             var options, encrypted;
             return __generator(this, function (_a) {
                 options = {};
@@ -270,7 +292,7 @@ var EthAuthIDWallet = /** @class */ (function () {
     EthAuthIDWallet.prototype.getKeyPair = function (password) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var keys, controller, keyPair, err_5;
+            var keys, controller, keyPair, err_6;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -283,8 +305,8 @@ var EthAuthIDWallet = /** @class */ (function () {
                         onSuccess(keyPair);
                         return [3 /*break*/, 3];
                     case 2:
-                        err_5 = _a.sent();
-                        onError(err_5);
+                        err_6 = _a.sent();
+                        onError(err_6);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -294,7 +316,7 @@ var EthAuthIDWallet = /** @class */ (function () {
     EthAuthIDWallet.prototype.getInfo = function () {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var info_1, err_6;
+            var info_1, err_7;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -303,7 +325,7 @@ var EthAuthIDWallet = /** @class */ (function () {
                         info_1 = {};
                         return [4 /*yield*/, this.infoStorage.forEach(function (dantum) { return __awaiter(_this, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
-                                    info_1[dantum.key] = dantum.value;
+                                    info_1[dantum["key"]] = dantum["value"];
                                     return [2 /*return*/];
                                 });
                             }); })];
@@ -312,8 +334,8 @@ var EthAuthIDWallet = /** @class */ (function () {
                         onSuccess(info_1);
                         return [3 /*break*/, 3];
                     case 2:
-                        err_6 = _a.sent();
-                        onError(err_6);
+                        err_7 = _a.sent();
+                        onError(err_7);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -323,7 +345,7 @@ var EthAuthIDWallet = /** @class */ (function () {
     EthAuthIDWallet.prototype.getPublicKeys = function (password) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var keys, publicKeys, err_7;
+            var keys, publicKeys, err_8;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -338,8 +360,8 @@ var EthAuthIDWallet = /** @class */ (function () {
                         onSuccess(publicKeys);
                         return [3 /*break*/, 3];
                     case 2:
-                        err_7 = _a.sent();
-                        onError(err_7);
+                        err_8 = _a.sent();
+                        onError(err_8);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -349,7 +371,7 @@ var EthAuthIDWallet = /** @class */ (function () {
     EthAuthIDWallet.prototype.getMnemonic = function (password) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var keys, err_8;
+            var keys, err_9;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -360,8 +382,8 @@ var EthAuthIDWallet = /** @class */ (function () {
                         onSuccess(keys["controller"]["mnemonic"]);
                         return [3 /*break*/, 3];
                     case 2:
-                        err_8 = _a.sent();
-                        onError(err_8);
+                        err_9 = _a.sent();
+                        onError(err_9);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -371,7 +393,7 @@ var EthAuthIDWallet = /** @class */ (function () {
     EthAuthIDWallet.prototype.recoverFromMnemonic = function (mnemonic, password) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var controllerHDNode, controller, controllerEntropy, authKeyEntropy, authPrivateKey, authPublicKey, privateKeyHex, publicKeyHex, authorizationKey, keys, err_9;
+            var controllerHDNode, controller, controllerEntropy, authKeyEntropy, authPrivateKey, authPublicKey, privateKeyHex, publicKeyHex, authorizationKey, keys, err_10;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -403,8 +425,8 @@ var EthAuthIDWallet = /** @class */ (function () {
                         onSuccess();
                         return [3 /*break*/, 3];
                     case 2:
-                        err_9 = _a.sent();
-                        onError(err_9);
+                        err_10 = _a.sent();
+                        onError(err_10);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -414,7 +436,7 @@ var EthAuthIDWallet = /** @class */ (function () {
     EthAuthIDWallet.prototype.init = function () {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
-            var processorsPath, infoPath, err_10;
+            var processorsPath, infoPath, err_11;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -433,8 +455,8 @@ var EthAuthIDWallet = /** @class */ (function () {
                         onSuccess();
                         return [3 /*break*/, 4];
                     case 3:
-                        err_10 = _a.sent();
-                        onError(err_10);
+                        err_11 = _a.sent();
+                        onError(err_11);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }

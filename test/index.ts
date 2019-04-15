@@ -1,4 +1,6 @@
 import { JsonRpcProvider } from "ethers/providers";
+import { EthUsername, UsernameRegistryContract } from "eth-username";
+import { Wallet } from "ethers";
 import { EthAuthIDDriver } from "../src";
 import { Processor } from "ethb-did";
 import { expect, assert } from "chai";
@@ -7,18 +9,23 @@ import ganache from "ganache-cli";
 import Web3 from "web3";
 import fs from "fs";
 
+
+/*
+* Test fails
+*/
 describe("Testing eth-driver", () => {
   const IPFS_HOST = "/ip4/127.0.0.1/tcp/5001";
   const RPC_HOST = "http://127.0.0.1:9545";
 
   const password = "password123";
+  const username = "user1";
 
-  let ethServer;
-  let rpcProvider;
+  let ethServer: any;
+  let rpcProvider: JsonRpcProvider;
   let web3: Web3;
 
-  let driverAddress;
-  let did;
+  let driverAddress: string;
+  let did: string;
 
   let ethDriver: EthAuthIDDriver;
 
@@ -29,7 +36,22 @@ describe("Testing eth-driver", () => {
 
     web3 = new Web3(new Web3.providers.HttpProvider(RPC_HOST));
 
-    ethDriver = new EthAuthIDDriver("./test-driver-dir", rpcProvider, IPFS_HOST);
+    // The wallet used to deploy the test username contract
+    let usernameContractWallet: Wallet = Wallet.createRandom().connect(rpcProvider);
+
+    let accounts = await web3.eth.getAccounts();
+
+    await web3.eth.sendTransaction({
+      from: accounts[1],
+      to: usernameContractWallet.address,
+      value: web3.utils.toWei("5", "ether")
+    });
+
+    let usernameContractAddress = await UsernameRegistryContract.deploy(usernameContractWallet);
+
+    ethDriver = new EthAuthIDDriver("./test-driver-dir", rpcProvider,
+      IPFS_HOST, EthUsername.LOCAL_TESTNET,
+      { usernameContract: usernameContractAddress });
   });
 
   describe("Driver setup", () => {
@@ -151,7 +173,7 @@ describe("Testing eth-driver", () => {
       await web3.eth.sendTransaction({
         from: accounts[1],
         to: this.driverAddress,
-        value: Web3.utils.toWei("5", "ether")
+        value: web3.utils.toWei("5", "ether")
       });
     });
 
@@ -160,6 +182,17 @@ describe("Testing eth-driver", () => {
         try {
           this.did = await ethDriver.registerDID(password);
           console.log("Registered did:", this.did);
+          done();
+        } catch (err) {
+          done(new Error(err));
+        }
+      });
+    });
+
+    it("Should register a username", (done) => {
+      assert.doesNotThrow(async () => {
+        try {
+          await ethDriver.registerName(password, username);
           done();
         } catch (err) {
           done(new Error(err));
@@ -252,10 +285,21 @@ describe("Testing eth-driver", () => {
       });
     });
 
-    it("Jwt should be valid", (done) => {
+    it("Jwt should be valid against the did", (done) => {
       assert.doesNotThrow(async () => {
         try {
           await ethDriver.verifyJwt(this.jwt, this.did);
+          done();
+        } catch (err) {
+          done(new Error(err));
+        }
+      });
+    });
+
+    it("Jwt should be valid against the name", (done) => {
+      assert.doesNotThrow(async () => {
+        try {
+          await ethDriver.verifyJwt(this.jwt, "user1.eth");
           done();
         } catch (err) {
           done(new Error(err));

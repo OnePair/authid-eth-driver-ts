@@ -40,15 +40,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var providers_1 = require("ethers/providers");
+var eth_username_1 = require("eth-username");
+var ethers_1 = require("ethers");
 var src_1 = require("../src");
 var ethb_did_1 = require("ethb-did");
 var chai_1 = require("chai");
 var ganache_cli_1 = __importDefault(require("ganache-cli"));
 var web3_1 = __importDefault(require("web3"));
+/*
+* Test fails
+*/
 describe("Testing eth-driver", function () {
     var IPFS_HOST = "/ip4/127.0.0.1/tcp/5001";
     var RPC_HOST = "http://127.0.0.1:9545";
     var password = "password123";
+    var username = "user1";
     var ethServer;
     var rpcProvider;
     var web3;
@@ -56,13 +62,31 @@ describe("Testing eth-driver", function () {
     var did;
     var ethDriver;
     before(function () { return __awaiter(_this, void 0, void 0, function () {
+        var usernameContractWallet, accounts, usernameContractAddress;
         return __generator(this, function (_a) {
-            ethServer = ganache_cli_1.default.server();
-            ethServer.listen(9545);
-            rpcProvider = new providers_1.JsonRpcProvider(RPC_HOST);
-            web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(RPC_HOST));
-            ethDriver = new src_1.EthAuthIDDriver("./test-driver-dir", rpcProvider, IPFS_HOST);
-            return [2 /*return*/];
+            switch (_a.label) {
+                case 0:
+                    ethServer = ganache_cli_1.default.server();
+                    ethServer.listen(9545);
+                    rpcProvider = new providers_1.JsonRpcProvider(RPC_HOST);
+                    web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(RPC_HOST));
+                    usernameContractWallet = ethers_1.Wallet.createRandom().connect(rpcProvider);
+                    return [4 /*yield*/, web3.eth.getAccounts()];
+                case 1:
+                    accounts = _a.sent();
+                    return [4 /*yield*/, web3.eth.sendTransaction({
+                            from: accounts[1],
+                            to: usernameContractWallet.address,
+                            value: web3.utils.toWei("5", "ether")
+                        })];
+                case 2:
+                    _a.sent();
+                    return [4 /*yield*/, eth_username_1.UsernameRegistryContract.deploy(usernameContractWallet)];
+                case 3:
+                    usernameContractAddress = _a.sent();
+                    ethDriver = new src_1.EthAuthIDDriver("./test-driver-dir", rpcProvider, IPFS_HOST, eth_username_1.EthUsername.LOCAL_TESTNET, { usernameContract: usernameContractAddress });
+                    return [2 /*return*/];
+            }
         });
     }); });
     describe("Driver setup", function () {
@@ -258,7 +282,7 @@ describe("Testing eth-driver", function () {
                         return [4 /*yield*/, web3.eth.sendTransaction({
                                 from: accounts[1],
                                 to: this.driverAddress,
-                                value: web3_1.default.utils.toWei("5", "ether")
+                                value: web3.utils.toWei("5", "ether")
                             })];
                     case 2:
                         _a.sent();
@@ -289,9 +313,30 @@ describe("Testing eth-driver", function () {
                 });
             }); });
         });
+        it("Should register a username", function (done) {
+            chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
+                var err_8;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4 /*yield*/, ethDriver.registerName(password, username)];
+                        case 1:
+                            _a.sent();
+                            done();
+                            return [3 /*break*/, 3];
+                        case 2:
+                            err_8 = _a.sent();
+                            done(new Error(err_8));
+                            return [3 /*break*/, 3];
+                        case 3: return [2 /*return*/];
+                    }
+                });
+            }); });
+        });
         it("Should authorize a processor", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var _a, err_8;
+                var _a, err_9;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
@@ -303,8 +348,8 @@ describe("Testing eth-driver", function () {
                             done();
                             return [3 /*break*/, 3];
                         case 2:
-                            err_8 = _b.sent();
-                            done(new Error(err_8));
+                            err_9 = _b.sent();
+                            done(new Error(err_9));
                             return [3 /*break*/, 3];
                         case 3: return [2 /*return*/];
                     }
@@ -313,7 +358,7 @@ describe("Testing eth-driver", function () {
         });
         it("Should import processor", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var err_9;
+                var err_10;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -324,8 +369,8 @@ describe("Testing eth-driver", function () {
                             done();
                             return [3 /*break*/, 3];
                         case 2:
-                            err_9 = _a.sent();
-                            done(new Error(err_9));
+                            err_10 = _a.sent();
+                            done(new Error(err_10));
                             return [3 /*break*/, 3];
                         case 3: return [2 /*return*/];
                     }
@@ -334,7 +379,7 @@ describe("Testing eth-driver", function () {
         });
         it("Externally signed jwt should be valid", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var processor, jwt, err_10;
+                var processor, jwt, err_11;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -349,8 +394,8 @@ describe("Testing eth-driver", function () {
                             done();
                             return [3 /*break*/, 4];
                         case 3:
-                            err_10 = _a.sent();
-                            done(new Error(err_10));
+                            err_11 = _a.sent();
+                            done(new Error(err_11));
                             return [3 /*break*/, 4];
                         case 4: return [2 /*return*/];
                     }
@@ -359,7 +404,7 @@ describe("Testing eth-driver", function () {
         });
         it("Externally signed jwt should be invalid", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var processor, jwt, err_11;
+                var processor, jwt, err_12;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -374,7 +419,7 @@ describe("Testing eth-driver", function () {
                             done(new Error("JWT should be invalid!"));
                             return [3 /*break*/, 4];
                         case 3:
-                            err_11 = _a.sent();
+                            err_12 = _a.sent();
                             done();
                             return [3 /*break*/, 4];
                         case 4: return [2 /*return*/];
@@ -384,7 +429,7 @@ describe("Testing eth-driver", function () {
         });
         it("Should revoke processor", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var err_12;
+                var err_13;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -395,8 +440,8 @@ describe("Testing eth-driver", function () {
                             done();
                             return [3 /*break*/, 3];
                         case 2:
-                            err_12 = _a.sent();
-                            done(new Error(err_12));
+                            err_13 = _a.sent();
+                            done(new Error(err_13));
                             return [3 /*break*/, 3];
                         case 3: return [2 /*return*/];
                     }
@@ -405,7 +450,7 @@ describe("Testing eth-driver", function () {
         });
         it("Jwt signed by revoked processor should be invalid", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var processor, jwt, err_13;
+                var processor, jwt, err_14;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -420,7 +465,7 @@ describe("Testing eth-driver", function () {
                             done(new Error("JWT should be invalid!"));
                             return [3 /*break*/, 4];
                         case 3:
-                            err_13 = _a.sent();
+                            err_14 = _a.sent();
                             done();
                             return [3 /*break*/, 4];
                         case 4: return [2 /*return*/];
@@ -430,7 +475,7 @@ describe("Testing eth-driver", function () {
         });
         it("Should create a Jwt", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var _a, err_14;
+                var _a, err_15;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
@@ -442,17 +487,17 @@ describe("Testing eth-driver", function () {
                             done();
                             return [3 /*break*/, 3];
                         case 2:
-                            err_14 = _b.sent();
-                            done(new Error(err_14));
+                            err_15 = _b.sent();
+                            done(new Error(err_15));
                             return [3 /*break*/, 3];
                         case 3: return [2 /*return*/];
                     }
                 });
             }); });
         });
-        it("Jwt should be valid", function (done) {
+        it("Jwt should be valid against the did", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var err_15;
+                var err_16;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -463,8 +508,29 @@ describe("Testing eth-driver", function () {
                             done();
                             return [3 /*break*/, 3];
                         case 2:
-                            err_15 = _a.sent();
-                            done(new Error(err_15));
+                            err_16 = _a.sent();
+                            done(new Error(err_16));
+                            return [3 /*break*/, 3];
+                        case 3: return [2 /*return*/];
+                    }
+                });
+            }); });
+        });
+        it("Jwt should be valid against the name", function (done) {
+            chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
+                var err_17;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4 /*yield*/, ethDriver.verifyJwt(this.jwt, "user1.eth")];
+                        case 1:
+                            _a.sent();
+                            done();
+                            return [3 /*break*/, 3];
+                        case 2:
+                            err_17 = _a.sent();
+                            done(new Error(err_17));
                             return [3 /*break*/, 3];
                         case 3: return [2 /*return*/];
                     }

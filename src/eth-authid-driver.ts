@@ -1,28 +1,45 @@
 import { EthAuthIDWallet } from "./eth-authid-wallet";
 import { Provider } from "ethers/providers";
+import { Wallet } from "ethers";
 import { EthBDID, Processor } from "ethb-did";
+import { EthUsername } from "eth-username";
 import { randomBytes } from "crypto";
 
 import Path from "path";
+import Url from "url";
 import Storage from "node-persist";
 import Secp256k1 from "secp256k1";
+import Jwt from "jsonwebtoken";
 
 const WALLET_DIR_NAME = "wallet";
 const PROCESSORS_STORAGE = "processors.storage";
 
+/*
+* TODO: add type to promises
+*/
 export class EthAuthIDDriver {
   private filePath: string;
   private provider: Provider; // Note: Provider is causing issues
   private ipfsHost: string;
+  private network: string;
+  private usernameContract: string;
 
   private wallet: EthAuthIDWallet;
   private processors: Storage;
 
-  constructor(filePath: string, provider: Provider, ipfsHost: string) {
+  constructor(filePath: string, provider: Provider,
+    ipfsHost: string, network: string);
+  constructor(filePath: string, provider: Provider,
+    ipfsHost: string, network: string, options: object);
+  constructor(filePath: string, provider: Provider,
+    ipfsHost: string, network: string, options?: object) {
     this.filePath = filePath;
     this.provider = provider;
     this.ipfsHost = ipfsHost;
+    this.network = network;
+    this.usernameContract = options && options["usernameContract"] || null;
   }
+
 
   /*
   * Gets the crypto/ledger address.
@@ -116,6 +133,56 @@ export class EthAuthIDDriver {
         onError(err);
       }
     });
+  }
+
+  /*
+  * Register a name.
+  * TODO: Save info in wallet (or do we???). Check if name already exists
+  * @param {string} password The wallet password.
+  * @param {string} name The name to register.
+  *
+  * @return {Promise<string>} The transaction address.
+  */
+  public registerName(password: string, name: string): Promise<string> {
+    return new Promise<string>(async (onSuccess: Function, onError: Function) => {
+      try {
+        let info = await this.getInfo();
+        if (!("did" in info))
+          throw new Error("This wallet does not contain a DID!");
+        if ("name" in info)
+          throw new Error("This wallet already contains a name!");
+
+        let profile = { username: name, did: info["did"] };
+        let signedProfile = await this.createJwt(password, profile, null);
+
+        let keys = await this.wallet.unlockKeys(password);
+        let privateKey = keys["controller"]["privateKey"];
+
+        let usernameWallet = new Wallet(privateKey, this.provider);
+
+        let options = {};
+        if (this.usernameContract)
+          options["contractAddress"] = this.usernameContract;
+        let ethUsername = await EthUsername.load(usernameWallet, this.network, options);
+        let transaction = await ethUsername.registerUsername(name, { did: signedProfile });
+
+        this.wallet.setName(name);
+
+        onSuccess(transaction["hash"]);
+      } catch (err) {
+        onError(err);
+      }
+    });
+  }
+
+  /*
+  * Import an already registered name.
+  *
+  * @param {string} password The wallet password.
+  * @param {string} name The name to import.
+  */
+  public importName(name: string): Promise<void> {
+    throw new Error("Not implemented!");
   }
 
   /*
@@ -256,6 +323,12 @@ export class EthAuthIDDriver {
         if (!("did" in info))
           throw new Error("This wallet does not contain a DID!");
 
+        if ("name" in claims)
+          throw new Error("'name' is a reserved key!");
+
+        if ("name" in info)
+          claims["name"] = info["name"];
+
         // Get a processor key for signing
         let processorObj = await this.wallet.getProcessor("auth", password);
         let processor = Processor.parse(processorObj["token"]);
@@ -281,8 +354,42 @@ export class EthAuthIDDriver {
   public verifyJwt(jwt: string, id: string): Promise<object> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
       try {
+        let didUri: string;
+
+        let parsed = Url.parse(id);
+        if (parsed.protocol != null && parsed.protocol.toUpperCase() == "DID:")
+          didUri = id;
+        else {
+          /*
+          * Verify against the username
+          */
+          let options = {};
+          if (this.usernameContract)
+            options["contractAddress"] = this.usernameContract;
+          let ethUsername = await EthUsername.load(
+            Wallet.createRandom().connect(this.provider), this.network, options);
+
+          // Resolve the username profile
+          let username = EthAuthIDDriver.cleanName(id);
+          let profile = await ethUsername.getProfile(username);
+
+          let decoded = await Jwt.decode(profile["did"]);
+
+          // Make sure that the resolved DID claimes to own the username
+          let signedUsername = decoded["username"];
+          let claimedDid = decoded["did"];
+
+          if (signedUsername != username)
+            throw new Error("The username does not own this DID!");
+
+          // Verify the claim
+          await this.verifyJwt(profile["did"], claimedDid);
+
+          didUri = claimedDid;
+        }
+
         // 2) Resolve the did
-        let did = await EthBDID.resolve(id, this.provider);
+        let did = await EthBDID.resolve(didUri, this.provider);
         // 3) Verify the jwt against the did
         let verified = await did.verifyJwt(jwt, "signing");
 
@@ -329,6 +436,7 @@ export class EthAuthIDDriver {
         await Storage.init({ dir: processorStorageDir });
 
         EthBDID.connectToIpfs(this.ipfsHost);
+        EthUsername.connectToIpfs(this.ipfsHost);
 
         onSuccess();
       } catch (err) {
@@ -349,5 +457,9 @@ export class EthAuthIDDriver {
     let publicKeyHex = Buffer.from(publicKey).toString("hex");
 
     return { privateKey: privateKeyHex, publicKey: publicKeyHex }
+  }
+
+  private static cleanName(name: string): string {
+    return name.substring(0, name.lastIndexOf(".eth"));
   }
 }
