@@ -406,7 +406,7 @@ var EthAuthIDDriver = /** @class */ (function () {
                         if ("name" in claims)
                             throw new Error("'name' is a reserved key!");
                         if ("name" in info)
-                            claims["name"] = info["name"];
+                            claims["name"] = info["name"] + ".eth";
                         return [4 /*yield*/, this.wallet.getProcessor("auth", password)];
                     case 2:
                         processorObj = _a.sent();

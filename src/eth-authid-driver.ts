@@ -327,7 +327,7 @@ export class EthAuthIDDriver {
           throw new Error("'name' is a reserved key!");
 
         if ("name" in info)
-          claims["name"] = info["name"];
+          claims["name"] = info["name"] + ".eth";
 
         // Get a processor key for signing
         let processorObj = await this.wallet.getProcessor("auth", password);
