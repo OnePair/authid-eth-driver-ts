@@ -320,7 +320,7 @@ export class EthAuthIDDriver {
   public createJwt(password: string, claims: object,
     expiresIn: string): Promise<string>;
   public createJwt(password: string, claims: object,
-    expiresIn: string, permission: string);
+    expiresIn: string, permission: string): Promise<string>;
   public createJwt(password: string, claims: object,
     expiresIn: string, permission?: string): Promise<string> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
