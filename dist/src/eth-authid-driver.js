@@ -381,16 +381,7 @@ var EthAuthIDDriver = /** @class */ (function () {
             });
         }); });
     };
-    /*
-    * Create a new JWT.
-    *
-    * @param {string} password The wallet password.
-    * @param {object} claims The claims for the jwt.
-    * @param {string} expiresIn Expiry time.
-    *
-    * @return {Promise<string>} The jwt.
-    */
-    EthAuthIDDriver.prototype.createJwt = function (password, claims, expiresIn) {
+    EthAuthIDDriver.prototype.createJwt = function (password, claims, expiresIn, permission) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
             var info, processorObj, processor, privateKey, jwt, err_8;
@@ -398,6 +389,7 @@ var EthAuthIDDriver = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 3, , 4]);
+                        permission = permission || "signing";
                         return [4 /*yield*/, this.getInfo()];
                     case 1:
                         info = _a.sent();
@@ -407,7 +399,7 @@ var EthAuthIDDriver = /** @class */ (function () {
                             throw new Error("'name' is a reserved key!");
                         if ("name" in info)
                             claims["name"] = info["name"] + ".eth";
-                        return [4 /*yield*/, this.wallet.getProcessor("auth", password)];
+                        return [4 /*yield*/, this.wallet.getProcessor(permission, password)];
                     case 2:
                         processorObj = _a.sent();
                         processor = ethb_did_1.Processor.parse(processorObj["token"]);
@@ -424,15 +416,7 @@ var EthAuthIDDriver = /** @class */ (function () {
             });
         }); });
     };
-    /*
-    * Verify a jwt.
-    *
-    * @param {string} jwt The json web token.
-    * @param {string} id The id that signed the jwt.
-    *
-    * @return {Promis<object>} The verification result.
-    */
-    EthAuthIDDriver.prototype.verifyJwt = function (jwt, id) {
+    EthAuthIDDriver.prototype.verifyJwt = function (jwt, id, permission) {
         var _this = this;
         return new Promise(function (onSuccess, onError) { return __awaiter(_this, void 0, void 0, function () {
             var didUri, parsed, options, ethUsername, username, profile, decoded, signedUsername, claimedDid, did, verified, err_9;
@@ -440,6 +424,7 @@ var EthAuthIDDriver = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 9, , 10]);
+                        permission = permission || "signing";
                         didUri = void 0;
                         parsed = url_1.default.parse(id);
                         if (!(parsed.protocol != null && parsed.protocol.toUpperCase() == "DID:")) return [3 /*break*/, 1];
@@ -473,7 +458,7 @@ var EthAuthIDDriver = /** @class */ (function () {
                     case 6: return [4 /*yield*/, ethb_did_1.EthBDID.resolve(didUri, this.provider)];
                     case 7:
                         did = _a.sent();
-                        return [4 /*yield*/, did.verifyJwt(jwt, "signing")];
+                        return [4 /*yield*/, did.verifyJwt(jwt, permission)];
                     case 8:
                         verified = _a.sent();
                         onSuccess(verified);

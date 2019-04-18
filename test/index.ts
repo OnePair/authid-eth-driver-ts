@@ -162,9 +162,11 @@ describe("Testing eth-driver", () => {
     const wrongProcessorPrivateKey = "bdb5e9b06786166dfe71461227b276a4daf1a8cdf23fcdb9910ae0888e58822e";
 
     const claims = { key: "value" };
+    const authClaims = { sig: "sig" };
 
-    let processorToken;
-    let jwt;
+    let processorToken: string;
+    let jwt: string;
+    let authJwt: string;
 
     before(async () => {
       console.log("Funding the authid ethereum address...");
@@ -284,6 +286,19 @@ describe("Testing eth-driver", () => {
         }
       });
     });
+
+    it("Should create a Jwt for auth", (done) => {
+      assert.doesNotThrow(async () => {
+        try {
+          this.jwt =
+            await ethDriver.createJwt(password, authClaims, "1 day", "auth");
+          done();
+        } catch (err) {
+          done(new Error(err));
+        }
+      });
+    });
+
 
     it("Jwt should be valid against the did", (done) => {
       assert.doesNotThrow(async () => {

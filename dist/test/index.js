@@ -268,8 +268,10 @@ describe("Testing eth-driver", function () {
         var processorId = "processor";
         var wrongProcessorPrivateKey = "bdb5e9b06786166dfe71461227b276a4daf1a8cdf23fcdb9910ae0888e58822e";
         var claims = { key: "value" };
+        var authClaims = { sig: "sig" };
         var processorToken;
         var jwt;
+        var authJwt;
         before(function () { return __awaiter(_this, void 0, void 0, function () {
             var accounts;
             return __generator(this, function (_a) {
@@ -495,9 +497,32 @@ describe("Testing eth-driver", function () {
                 });
             }); });
         });
+        it("Should create a Jwt for auth", function (done) {
+            chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
+                var _a, err_16;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            _b.trys.push([0, 2, , 3]);
+                            _a = this;
+                            return [4 /*yield*/, ethDriver.createJwt(password, authClaims, "1 day", "auth")];
+                        case 1:
+                            _a.jwt =
+                                _b.sent();
+                            done();
+                            return [3 /*break*/, 3];
+                        case 2:
+                            err_16 = _b.sent();
+                            done(new Error(err_16));
+                            return [3 /*break*/, 3];
+                        case 3: return [2 /*return*/];
+                    }
+                });
+            }); });
+        });
         it("Jwt should be valid against the did", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var err_16;
+                var err_17;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -508,8 +533,8 @@ describe("Testing eth-driver", function () {
                             done();
                             return [3 /*break*/, 3];
                         case 2:
-                            err_16 = _a.sent();
-                            done(new Error(err_16));
+                            err_17 = _a.sent();
+                            done(new Error(err_17));
                             return [3 /*break*/, 3];
                         case 3: return [2 /*return*/];
                     }
@@ -518,7 +543,7 @@ describe("Testing eth-driver", function () {
         });
         it("Jwt should be valid against the name", function (done) {
             chai_1.assert.doesNotThrow(function () { return __awaiter(_this, void 0, void 0, function () {
-                var err_17;
+                var err_18;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -529,8 +554,8 @@ describe("Testing eth-driver", function () {
                             done();
                             return [3 /*break*/, 3];
                         case 2:
-                            err_17 = _a.sent();
-                            done(new Error(err_17));
+                            err_18 = _a.sent();
+                            done(new Error(err_18));
                             return [3 /*break*/, 3];
                         case 3: return [2 /*return*/];
                     }

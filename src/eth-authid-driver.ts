@@ -313,12 +313,20 @@ export class EthAuthIDDriver {
   * @param {string} password The wallet password.
   * @param {object} claims The claims for the jwt.
   * @param {string} expiresIn Expiry time.
+  * @param [string] permission Processor permission.
   *
   * @return {Promise<string>} The jwt.
   */
-  public createJwt(password: string, claims: object, expiresIn: string): Promise<string> {
+  public createJwt(password: string, claims: object,
+    expiresIn: string): Promise<string>;
+  public createJwt(password: string, claims: object,
+    expiresIn: string, permission: string);
+  public createJwt(password: string, claims: object,
+    expiresIn: string, permission?: string): Promise<string> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
       try {
+        permission = permission || "signing";
+
         let info = await this.getInfo();
         if (!("did" in info))
           throw new Error("This wallet does not contain a DID!");
@@ -330,7 +338,7 @@ export class EthAuthIDDriver {
           claims["name"] = info["name"] + ".eth";
 
         // Get a processor key for signing
-        let processorObj = await this.wallet.getProcessor("auth", password);
+        let processorObj = await this.wallet.getProcessor(permission, password);
         let processor = Processor.parse(processorObj["token"]);
         let privateKey = processorObj["privateKey"];
 
@@ -351,9 +359,13 @@ export class EthAuthIDDriver {
   *
   * @return {Promis<object>} The verification result.
   */
-  public verifyJwt(jwt: string, id: string): Promise<object> {
+  public verifyJwt(jwt: string, id: string): Promise<object>;
+  public verifyJwt(jwt: string, id: string, permission: string): Promise<object>;
+  public verifyJwt(jwt: string, id: string, permission?: string): Promise<object> {
     return new Promise(async (onSuccess: Function, onError: Function) => {
       try {
+        permission = permission || "signing";
+
         let didUri: string;
 
         let parsed = Url.parse(id);
@@ -391,7 +403,7 @@ export class EthAuthIDDriver {
         // 2) Resolve the did
         let did = await EthBDID.resolve(didUri, this.provider);
         // 3) Verify the jwt against the did
-        let verified = await did.verifyJwt(jwt, "signing");
+        let verified = await did.verifyJwt(jwt, permission);
 
         onSuccess(verified)
       } catch (err) {
